@@ -1,0 +1,5 @@
+# Python cache files
+__pycache__/
+
+# Django database (using MariaDB instead of SQLite)
+db.sqlite3
