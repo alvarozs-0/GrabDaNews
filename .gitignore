@@ -2,4 +2,4 @@
 __pycache__/
 
 # Django database (using MariaDB instead of SQLite)
-db.sqlite3
+#db.sqlite3
