@@ -282,7 +282,7 @@ class Newsletter(models.Model):
         # Auto-set publisher based on author's publisher if not set
         if not self.publisher and self.author.publisher:
             self.publisher = self.author.publisher
- 
+
         super().save(*args, **kwargs)
 
 
