@@ -97,8 +97,18 @@ class CustomUser(AbstractUser):
         Set permissions for groups based on role.
         """
         # Get content types for our models
-        article_ct = ContentType.objects.get_for_model('news.Article')
-        newsletter_ct = ContentType.objects.get_for_model('news.Newsletter')
+        try:
+            article_ct = ContentType.objects.get(
+                app_label='news',
+                model='article'
+            )
+            newsletter_ct = ContentType.objects.get(
+                app_label='news',
+                model='newsletter'
+            )
+        except ContentType.DoesNotExist:
+            # Content types not created yet during migrations
+            return
 
         if role == 'reader':
             # Readers can only view articles and newsletters
@@ -201,9 +211,6 @@ class Article(models.Model):
 
     # Publishing details
     published_at = models.DateTimeField(null=True, blank=True)
-
-    # Media
-    featured_image = models.ImageField(upload_to='articles/', blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

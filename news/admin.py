@@ -49,7 +49,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Article Information', {
-            'fields': ('title', 'content', 'featured_image')
+            'fields': ('title', 'content')
         }),
         ('Author & Publication', {
             'fields': ('author', 'publisher')
