@@ -70,20 +70,20 @@ class UserRegistrationForm(UserCreationForm):
         initial='reader'
     )
 
-    publisher = forms.ModelChoiceField(
+    publishers = forms.ModelMultipleChoiceField(
         queryset=Publisher.objects.all(),
         required=False,
-        widget=forms.Select(attrs={
-            'class': 'form-control'
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
         }),
-        empty_label="Select a publisher (optional)"
+        help_text="Select one or more publishers (optional)"
     )
 
     class Meta:
         model = CustomUser
         fields = [
             'username', 'email', 'first_name', 'last_name',
-            'role', 'publisher', 'password1', 'password2'
+            'role', 'publishers', 'password1', 'password2'
         ]
         widgets = {
             'username': forms.TextInput(attrs={
@@ -106,19 +106,10 @@ class UserRegistrationForm(UserCreationForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        role = cleaned_data.get('role')
-        publisher = cleaned_data.get('publisher')
-
-        # Require publisher for editors and journalists
-        if role in ['editor', 'journalist'] and not publisher:
-            raise forms.ValidationError(
-                "Editors and journalists must be associated with a publisher."
-            )
-
-        # Readers shouldn't have a publisher
-        if role == 'reader' and publisher:
-            cleaned_data['publisher'] = None
-
+        # No validation required - all roles can optionally select publishers
+        # Publishers will be handled differently based on role:
+        # - Editors/Journalists: publishers field (work affiliation)
+        # - Readers: subscribed_publishers field (subscriptions)
         return cleaned_data
 
     def save(self, commit=True):
@@ -127,10 +118,19 @@ class UserRegistrationForm(UserCreationForm):
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
         user.role = self.cleaned_data['role']
-        user.publisher = self.cleaned_data.get('publisher')
 
         if commit:
             user.save()
+            # Handle publisher relationships based on role
+            publishers = self.cleaned_data.get('publishers')
+            if publishers:
+                if user.role == 'reader':
+                    # For readers, set as subscriptions
+                    user.subscribed_publishers.set(publishers)
+                else:
+                    # For editors/journalists, set as work affiliation
+                    user.publishers.set(publishers)
+            
         return user
 
 
