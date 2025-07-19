@@ -1,56 +1,43 @@
-{% extends 'base.html' %} {% block title %}Edit Article - GrabDaNews{% endblock
-%} {% block content %}
+{% extends 'base.html' %}
+
+{% block title %}Edit Article - GrabDaNews{% endblock %}
+
+{% block content %}
 <div class="container">
   <h2>Edit Article</h2>
 
-  {% if messages %} {% for message in messages %}
-  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-  {% endfor %} {% endif %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
 
   <form method="post">
     {% csrf_token %}
 
     <div class="mb-3">
       <label for="title" class="form-label">Title</label>
-      <input
-        type="text"
-        class="form-control"
-        id="title"
-        name="title"
-        value="{{ article.title }}"
-        required
-        maxlength="200"
-      />
+      <input type="text" class="form-control" id="title" name="title" 
+             value="{{ article.title }}" required maxlength="200">
     </div>
 
     <div class="mb-3">
       <label for="content" class="form-label">Content</label>
-      <textarea
-        class="form-control"
-        id="content"
-        name="content"
-        rows="15"
-        required
-      >
-{{ article.content }}</textarea
-      >
+      <textarea class="form-control" id="content" name="content" rows="15" required>{{ article.content }}</textarea>
     </div>
 
     <div class="mb-3">
       <div class="alert alert-info">
         <strong>Publisher:</strong>
-        {% if article.publisher %} {{ article.publisher.name }} {% else %}
-        Independent (No Publisher) {% endif %}
-        <br />
+        {% if article.publisher %} {{ article.publisher.name }} {% else %} Independent (No Publisher) {% endif %}
+        <br>
         <small>Publisher cannot be changed after article creation.</small>
       </div>
     </div>
 
     <div class="mb-3">
       <button type="submit" class="btn btn-primary">Update Article</button>
-      <a href="{% url 'article_detail' article.id %}" class="btn btn-secondary"
-        >Cancel</a
-      >
+      <a href="{% url 'article_detail' article.id %}" class="btn btn-secondary">Cancel</a>
     </div>
   </form>
 
@@ -59,9 +46,7 @@
     <ul>
       <li>You can only edit articles that are in "Submitted" status</li>
       <li>Once an article is approved or rejected, it cannot be edited</li>
-      <li>
-        After editing, the article will remain in "Submitted" status for review
-      </li>
+      <li>After editing, the article will remain in "Submitted" status for review</li>
     </ul>
   </div>
 </div>
