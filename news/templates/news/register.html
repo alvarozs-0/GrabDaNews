@@ -47,17 +47,17 @@
       <small>Choose your role: Reader (view articles), Journalist (write articles), or Editor (review articles)</small>
     </div>
     
-    <div id="publisher-field" style="{% if role != 'journalist' and role != 'editor' %}display: none;{% endif %}">
+    <div>
       <label for="publisher">Publisher:</label>
       <select id="publisher" name="publisher">
-        <option value="">Select a publisher (required for editors and journalists)</option>
+        <option value="">Select a publisher (optional)</option>
         {% for pub in publishers %}
           <option value="{{ pub.id }}" {% if publisher_id == pub.id|stringformat:"s" %}selected{% endif %}>
             {{ pub.name }}
           </option>
         {% endfor %}
       </select>
-      <small>Required for editors and journalists</small>
+      <small>Only required if you're registering as an editor or journalist</small>
     </div>
     
     <div>
@@ -75,27 +75,4 @@
     <p>Already have an account? <a href="{% url 'login_user' %}">Login here</a></p>
   </form>
 </div>
-
-<script>
-// Show/hide publisher field based on role selection
-document.addEventListener('DOMContentLoaded', function() {
-    const roleField = document.getElementById('role');
-    const publisherField = document.getElementById('publisher-field');
-    
-    function togglePublisherField() {
-        const selectedRole = roleField.value;
-        if (selectedRole === 'editor' || selectedRole === 'journalist') {
-            publisherField.style.display = 'block';
-        } else {
-            publisherField.style.display = 'none';
-        }
-    }
-    
-    // Initial check
-    togglePublisherField();
-    
-    // Listen for changes
-    roleField.addEventListener('change', togglePublisherField);
-});
-</script>
 {% endblock %}
