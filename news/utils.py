@@ -28,14 +28,14 @@ def verify_email(email):
     return True
 
 
-def verify_role_publisher(role, publisher_id):
+def verify_role_publisher(role, publisher_ids):
     """Verify role and publisher combination."""
-    if role in ['editor', 'journalist']:
-        if not publisher_id:
-            return False, "Editors and journalists must select a publisher."
-        try:
-            Publisher.objects.get(id=publisher_id)
-            return True, ""
-        except Publisher.DoesNotExist:
-            return False, "Selected publisher does not exist."
+    # Validate that all publisher IDs exist (if any are provided)
+    if publisher_ids:
+        for publisher_id in publisher_ids:
+            try:
+                Publisher.objects.get(id=publisher_id)
+            except Publisher.DoesNotExist:
+                return False, (f"Publisher with ID {publisher_id} does not "
+                               f"exist.")
     return True, ""

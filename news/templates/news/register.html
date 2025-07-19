@@ -48,16 +48,18 @@
     </div>
     
     <div>
-      <label for="publisher">Publisher:</label>
-      <select id="publisher" name="publisher">
-        <option value="">Select a publisher (optional)</option>
+      <label>Publishers:</label>
+      <fieldset>
+        <legend>Select publishers (optional for all roles)</legend>
         {% for pub in publishers %}
-          <option value="{{ pub.id }}" {% if publisher_id == pub.id|stringformat:"s" %}selected{% endif %}>
-            {{ pub.name }}
-          </option>
+          <div>
+            <input type="checkbox" id="publisher_{{ pub.id }}" name="publishers" value="{{ pub.id }}"
+                   {% if pub.id|stringformat:"s" in publisher_ids %}checked{% endif %} />
+            <label for="publisher_{{ pub.id }}">{{ pub.name }}</label>
+          </div>
         {% endfor %}
-      </select>
-      <small>Only required if you're registering as an editor or journalist</small>
+      </fieldset>
+      <small>Readers: These become your subscriptions. Editors/Journalists: These are your work affiliations.</small>
     </div>
     
     <div>

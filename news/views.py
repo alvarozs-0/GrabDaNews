@@ -60,7 +60,8 @@ def register(request):
         password = request.POST.get('password', '').strip()
         confirm_password = request.POST.get('confirm_password', '').strip()
         role = request.POST.get('role', '').strip()
-        publisher_id = request.POST.get('publisher', '').strip()
+        # Get list of publisher IDs
+        publisher_ids = request.POST.getlist('publishers')
 
         # Check required fields
         required_fields = [
@@ -76,7 +77,7 @@ def register(request):
                 'first_name': first_name,
                 'last_name': last_name,
                 'role': role,
-                'publisher_id': publisher_id
+                'publisher_ids': publisher_ids
             }
             return render(request, 'news/register.html', context)
 
@@ -89,7 +90,7 @@ def register(request):
                 'first_name': first_name,
                 'last_name': last_name,
                 'role': role,
-                'publisher_id': publisher_id
+                'publisher_ids': publisher_ids
             }
             return render(request, 'news/register.html', context)
 
@@ -102,7 +103,7 @@ def register(request):
                 'first_name': first_name,
                 'last_name': last_name,
                 'role': role,
-                'publisher_id': publisher_id
+                'publisher_ids': publisher_ids
             }
             return render(request, 'news/register.html', context)
 
@@ -120,7 +121,7 @@ def register(request):
                 'first_name': first_name,
                 'last_name': last_name,
                 'role': role,
-                'publisher_id': publisher_id
+                'publisher_ids': publisher_ids
             }
             return render(request, 'news/register.html', context)
 
@@ -134,12 +135,12 @@ def register(request):
                 'first_name': first_name,
                 'last_name': last_name,
                 'role': role,
-                'publisher_id': publisher_id
+                'publisher_ids': publisher_ids
             }
             return render(request, 'news/register.html', context)
 
         # Verify role and publisher combination
-        is_valid, error_msg = verify_role_publisher(role, publisher_id)
+        is_valid, error_msg = verify_role_publisher(role, publisher_ids)
         if not is_valid:
             messages.error(request, error_msg)
             context = {
@@ -149,7 +150,7 @@ def register(request):
                 'first_name': first_name,
                 'last_name': last_name,
                 'role': role,
-                'publisher_id': publisher_id
+                'publisher_ids': publisher_ids
             }
             return render(request, 'news/register.html', context)
 
@@ -164,10 +165,15 @@ def register(request):
                 role=role
             )
 
-            # Set publisher if provided
-            if publisher_id:
-                publisher = Publisher.objects.get(id=publisher_id)
-                user.publisher = publisher
+            # Set publishers if provided
+            if publisher_ids:
+                publishers = Publisher.objects.filter(id__in=publisher_ids)
+                if role == 'reader':
+                    # For readers, set as subscriptions
+                    user.subscribed_publishers.set(publishers)
+                else:
+                    # For editors/journalists, set as work affiliation
+                    user.publishers.set(publishers)
 
             user.save()
 
@@ -190,7 +196,7 @@ def register(request):
                 'first_name': first_name,
                 'last_name': last_name,
                 'role': role,
-                'publisher_id': publisher_id
+                'publisher_ids': publisher_ids
             }
             return render(request, 'news/register.html', context)
 
