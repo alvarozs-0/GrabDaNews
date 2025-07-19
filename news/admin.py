@@ -10,16 +10,21 @@ class CustomUserAdmin(UserAdmin):
     """
     fieldsets = UserAdmin.fieldsets + (
         ('Role Information', {
-            'fields': ('role', 'publisher')
+            'fields': ('role', 'publishers')
         }),
         ('Subscriptions', {
             'fields': ('subscribed_publishers', 'subscribed_journalists')
         }),
     )
     readonly_fields = ()
-    list_display = ('username', 'email', 'role', 'publisher', 'is_staff')
-    list_filter = ('role', 'publisher', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'role', 'get_publishers', 'is_staff')
+    list_filter = ('role', 'publishers', 'is_staff', 'is_active')
     search_fields = ('username', 'email', 'first_name', 'last_name')
+
+    def get_publishers(self, obj):
+        """Display publishers for list view."""
+        return ", ".join([pub.name for pub in obj.publishers.all()])
+    get_publishers.short_description = 'Publishers'
 
 
 @admin.register(Publisher)

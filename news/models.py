@@ -50,10 +50,8 @@ class CustomUser(AbstractUser):
     )
 
     # Fields for Editor/Journalist roles
-    publisher = models.ForeignKey(
+    publishers = models.ManyToManyField(
         Publisher,
-        on_delete=models.CASCADE,
-        null=True,
         blank=True,
         related_name='staff_members'
     )
