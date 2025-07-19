@@ -19,7 +19,7 @@ def home(request):
     # Show recent approved articles
     recent_articles = Article.objects.filter(status='approved').order_by(
         '-published_at')[:5]
-    
+
     context = {
         'recent_articles': recent_articles
     }
@@ -223,7 +223,7 @@ def article_detail(request, article_id):
     View to display details of a specific article.
     """
     article = get_object_or_404(Article, id=article_id)
-    
+
     # Check if user can view this article
     if article.status != 'approved' and request.user != article.author:
         # Only allow author and editors to view non-approved articles
@@ -245,7 +245,7 @@ def article_list(request):
     List articles based on user role and permissions.
     """
     user = request.user
-    
+
     if user.role == 'journalist':
         # Journalists see their own articles
         articles = Article.objects.filter(author=user)
@@ -260,18 +260,18 @@ def article_list(request):
     else:
         # Readers see only approved articles
         articles = Article.objects.filter(status='approved')
-    
+
     # Pagination
     paginator = Paginator(articles, 10)  # Show 10 articles per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'page_obj': page_obj,
         'articles': page_obj,
         'user_role': user.role if user.is_authenticated else None
     }
-    
+
     return render(request, 'news/article_list.html', context)
 
 
@@ -283,12 +283,12 @@ def create_article(request):
     if request.user.role != 'journalist':
         messages.error(request, "Only journalists can create articles.")
         return redirect('article_list')
-    
+
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         content = request.POST.get('content', '').strip()
         publisher_id = request.POST.get('publisher', '').strip()
-        
+
         # Validation
         if not title or not content:
             messages.error(request, "Title and content are required.")
@@ -299,7 +299,7 @@ def create_article(request):
                 'publishers': request.user.publishers.all()
             }
             return render(request, 'news/create_article.html', context)
-        
+
         try:
             # Create article
             article = Article.objects.create(
@@ -308,7 +308,7 @@ def create_article(request):
                 author=request.user,
                 status='submitted'
             )
-            
+
             # Set publisher if provided
             if publisher_id:
                 try:
@@ -321,15 +321,15 @@ def create_article(request):
                         article.publisher = None
                 except Publisher.DoesNotExist:
                     article.publisher = None
-            
+
             article.save()
-            
+
             messages.success(request, "Article submitted successfully!")
             return redirect('article_detail', article_id=article.id)
-            
+
         except Exception as e:
             messages.error(request, f"Error creating article: {str(e)}")
-    
+
     # GET request - show form
     context = {
         'publishers': request.user.publishers.all()
@@ -343,7 +343,7 @@ def edit_article(request, article_id):
     Edit an existing article.
     """
     article = get_object_or_404(Article, id=article_id)
-    
+
     # Permission check
     if request.user.role == 'journalist' and article.author != request.user:
         messages.error(request, "You can only edit your own articles.")
@@ -358,11 +358,11 @@ def edit_article(request, article_id):
     else:
         messages.error(request, "Permission denied.")
         return redirect('article_list')
-    
+
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         content = request.POST.get('content', '').strip()
-        
+
         if not title or not content:
             messages.error(request, "Title and content are required.")
         else:
@@ -371,7 +371,7 @@ def edit_article(request, article_id):
             article.save()
             messages.success(request, "Article updated successfully!")
             return redirect('article_detail', article_id=article.id)
-    
+
     return render(request, 'news/edit_article.html', {'article': article})
 
 
@@ -380,22 +380,23 @@ def approve_article(request, article_id):
     """
     Approve or reject an article (editors only).
     """
+
     if request.user.role != 'editor':
         messages.error(request, "Only editors can approve articles.")
         return redirect('article_list')
-    
+
     article = get_object_or_404(Article, id=article_id)
-    
+
     # Check if editor can approve this article
     if (article.publisher and
             article.publisher not in request.user.publishers.all()):
         messages.error(request, "You can only approve articles from your "
                        "affiliated publishers.")
         return redirect('article_list')
-    
+
     if request.method == 'POST':
         action = request.POST.get('action')
-        
+
         if action == 'approve':
             article.status = 'approved'
             article.approved_by = request.user
@@ -405,10 +406,10 @@ def approve_article(request, article_id):
             article.status = 'rejected'
             article.approved_by = request.user
             messages.success(request, "Article rejected.")
-        
+
         article.save()
         return redirect('article_list')
-    
+
     return render(request, 'news/approve_article.html', {'article': article})
 
 

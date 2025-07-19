@@ -51,6 +51,7 @@
       <label>Publishers:</label>
       <fieldset>
         <legend>Select publishers (optional for all roles)</legend>
+        <small>Readers: These become your subscriptions.<br> Editors/Journalists: These are your work affiliations.</small>
         {% for pub in publishers %}
           <div>
             <input type="checkbox" id="publisher_{{ pub.id }}" name="publishers" value="{{ pub.id }}"
@@ -59,7 +60,6 @@
           </div>
         {% endfor %}
       </fieldset>
-      <small>Readers: These become your subscriptions. Editors/Journalists: These are your work affiliations.</small>
     </div>
     
     <div>

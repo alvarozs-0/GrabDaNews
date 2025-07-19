@@ -17,18 +17,11 @@
     <nav>
       <ul>
         <li>
-          <a href="{% url 'home' %}" class="btn btn-primary me-2">Home</a>
+          <a href="{% url 'home' %}" class="btn btn-outline-primary me-2">Home</a>
         </li>
         {% if user.is_authenticated %}
           <li>
             <a href="{% url 'logout_user' %}" class="btn btn-outline-danger me-2">Logout</a>
-          </li>
-        {% else %}
-          <li>
-            <a href="{% url 'login_user' %}" class="btn btn-success me-2">Login</a>
-          </li>
-          <li>
-            <a href="{% url 'register' %}" class="btn btn-secondary">Register</a>
           </li>
         {% endif %}
       </ul>
