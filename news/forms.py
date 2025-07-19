@@ -24,7 +24,7 @@ class ArticleForm(forms.ModelForm):
                 'class': 'form-control'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Make publisher field optional for independent journalists
@@ -43,7 +43,7 @@ class UserRegistrationForm(UserCreationForm):
             'placeholder': 'Enter your email'
         })
     )
-    
+
     first_name = forms.CharField(
         max_length=30,
         required=True,
@@ -52,7 +52,7 @@ class UserRegistrationForm(UserCreationForm):
             'placeholder': 'Enter your first name'
         })
     )
-    
+
     last_name = forms.CharField(
         max_length=30,
         required=True,
@@ -61,7 +61,7 @@ class UserRegistrationForm(UserCreationForm):
             'placeholder': 'Enter your last name'
         })
     )
-    
+
     role = forms.ChoiceField(
         choices=CustomUser.ROLE_CHOICES,
         widget=forms.Select(attrs={
@@ -69,7 +69,7 @@ class UserRegistrationForm(UserCreationForm):
         }),
         initial='reader'
     )
-    
+
     publisher = forms.ModelChoiceField(
         queryset=Publisher.objects.all(),
         required=False,
@@ -78,7 +78,7 @@ class UserRegistrationForm(UserCreationForm):
         }),
         empty_label="Select a publisher (optional)"
     )
-    
+
     class Meta:
         model = CustomUser
         fields = [
@@ -91,7 +91,7 @@ class UserRegistrationForm(UserCreationForm):
                 'placeholder': 'Choose a username'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Add Bootstrap classes to password fields
@@ -103,24 +103,24 @@ class UserRegistrationForm(UserCreationForm):
             'class': 'form-control',
             'placeholder': 'Confirm password'
         })
-    
+
     def clean(self):
         cleaned_data = super().clean()
         role = cleaned_data.get('role')
         publisher = cleaned_data.get('publisher')
-        
+
         # Require publisher for editors and journalists
         if role in ['editor', 'journalist'] and not publisher:
             raise forms.ValidationError(
                 "Editors and journalists must be associated with a publisher."
             )
-        
+
         # Readers shouldn't have a publisher
         if role == 'reader' and publisher:
             cleaned_data['publisher'] = None
-        
+
         return cleaned_data
-    
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
@@ -128,7 +128,7 @@ class UserRegistrationForm(UserCreationForm):
         user.last_name = self.cleaned_data['last_name']
         user.role = self.cleaned_data['role']
         user.publisher = self.cleaned_data.get('publisher')
-        
+
         if commit:
             user.save()
         return user
@@ -155,7 +155,7 @@ class NewsletterForm(forms.ModelForm):
                 'class': 'form-control'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Make publisher field optional for independent journalists
