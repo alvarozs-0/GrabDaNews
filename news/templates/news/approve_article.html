@@ -1,0 +1,89 @@
+{% extends 'base.html' %} {% block title %}Review Article - GrabDaNews{%
+endblock %} {% block content %}
+<div class="container">
+  <h2>Review Article</h2>
+
+  {% if messages %} {% for message in messages %}
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %} {% endif %}
+
+  <div class="card">
+    <div class="card-header">
+      <h3>{{ article.title }}</h3>
+      <p class="text-muted mb-0">
+        By {{ article.author.get_full_name|default:article.author.username }} {%
+        if article.publisher %} for {{ article.publisher.name }} {% endif %}
+      </p>
+    </div>
+
+    <div class="card-body">
+      <div class="article-content mb-4">{{ article.content|linebreaksbr }}</div>
+
+      <div class="article-meta">
+        <p>
+          <strong>Status:</strong>
+          <span class="badge badge-warning"
+            >{{ article.get_status_display }}</span
+          >
+        </p>
+        <p>
+          <strong>Created:</strong> {{ article.created_at|date:"F d, Y \a\t g:i
+          A" }}
+        </p>
+        {% if article.updated_at != article.created_at %}
+        <p>
+          <strong>Last Updated:</strong> {{ article.updated_at|date:"F d, Y \a\t
+          g:i A" }}
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <h4>Editorial Decision</h4>
+
+    <form method="post" class="d-inline">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="approve" />
+      <button
+        type="submit"
+        class="btn btn-success me-2"
+        onclick="return confirm('Are you sure you want to approve this article? It will be published immediately.')"
+      >
+        <i class="fas fa-check"></i> Approve & Publish
+      </button>
+    </form>
+
+    <form method="post" class="d-inline">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="reject" />
+      <button
+        type="submit"
+        class="btn btn-danger me-2"
+        onclick="return confirm('Are you sure you want to reject this article?')"
+      >
+        <i class="fas fa-times"></i> Reject
+      </button>
+    </form>
+
+    <a href="{% url 'article_list' %}" class="btn btn-secondary"> Cancel </a>
+  </div>
+
+  <div class="alert alert-info mt-4">
+    <h5>Review Guidelines</h5>
+    <ul>
+      <li>
+        <strong>Approve:</strong> The article meets quality standards and will
+        be published immediately
+      </li>
+      <li>
+        <strong>Reject:</strong> The article needs improvement or doesn't meet
+        publication standards
+      </li>
+      <li>Authors can edit and resubmit rejected articles</li>
+      <li>Once approved, articles cannot be edited by the author</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

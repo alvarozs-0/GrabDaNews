@@ -227,9 +227,9 @@ class Article(models.Model):
         """
         Override save to handle approval workflow.
         """
-        # Auto-set publisher based on author's publisher if not set
-        if not self.publisher and self.author.publisher:
-            self.publisher = self.author.publisher
+        # Auto-set publisher based on author's first publisher if not set
+        if not self.publisher and self.author.publishers.exists():
+            self.publisher = self.author.publishers.first()
 
         super().save(*args, **kwargs)
 

@@ -1,0 +1,123 @@
+{% extends 'base.html' %} {% block title %}{{ article.title }} - GrabDaNews{%
+endblock %} {% block content %}
+<div class="container">
+  {% if messages %} {% for message in messages %}
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %} {% endif %}
+
+  <article>
+    <header class="mb-4">
+      <h1>{{ article.title }}</h1>
+
+      <div class="article-meta">
+        <p class="text-white">
+          By
+          <strong
+            >{{ article.author.get_full_name|default:article.author.username
+            }}</strong
+          >
+          {% if article.publisher %} for
+          <strong>{{ article.publisher.name }}</strong>
+          {% endif %}
+        </p>
+
+        <div class="d-flex align-items-center mb-2">
+          <span
+            class="badge {% if article.status == 'approved' %} bg-success {% elif article.status == 'rejected' %} bg-danger {% else %} bg-warning {% endif %} me-2"
+          >
+            {{ article.get_status_display }}
+          </span>
+
+          {% if article.approved_by %}
+          <small class="text-white">
+            Reviewed by {{
+            article.approved_by.get_full_name|default:article.approved_by.username
+            }}
+          </small>
+          {% endif %}
+        </div>
+
+        <p class="text-white">
+          <small>
+            Created: {{ article.created_at|date:"F d, Y \a\t g:i A" }} {% if
+            article.published_at %} | Published: {{ article.published_at|date:"F
+            d, Y \a\t g:i A" }} {% endif %} {% if article.updated_at !=
+            article.created_at %} | Last updated: {{ article.updated_at|date:"F
+            d, Y \a\t g:i A" }} {% endif %}
+          </small>
+        </p>
+      </div>
+    </header>
+
+    <div class="article-content">
+      <div class="content-text">{{ article.content|linebreaksbr }}</div>
+    </div>
+
+    <footer class="article-footer mt-4">
+      <div class="btn-group" role="group">
+        <a
+          href="{% url 'article_list' %}"
+          class="btn btn-outline-secondary text-white"
+        >
+          Back to Articles
+        </a>
+
+        {% if user.is_authenticated %}
+        <!-- Author actions -->
+        {% if user.role == 'journalist' and article.author == user %} {% if
+        article.status == 'submitted' %}
+        <a
+          href="{% url 'edit_article' article.id %}"
+          class="btn btn-outline-primary"
+        >
+          Edit Article
+        </a>
+        {% endif %}
+        <a
+          href="{% url 'delete_article' article.id %}"
+          class="btn btn-outline-danger"
+        >
+          Delete Article
+        </a>
+        {% endif %}
+
+        <!-- Editor actions -->
+        {% if user.role == 'editor' %} {% if article.status == 'submitted' %}
+        <a
+          href="{% url 'approve_article' article.id %}"
+          class="btn btn-outline-success"
+        >
+          Review Article
+        </a>
+        {% endif %} {% if not article.publisher or article.publisher in
+        user.publishers.all %}
+        <a
+          href="{% url 'delete_article' article.id %}"
+          class="btn btn-outline-danger"
+        >
+          Delete Article
+        </a>
+        {% endif %} {% endif %} {% endif %}
+      </div>
+    </footer>
+  </article>
+
+  {% if article.status == 'rejected' and user == article.author %}
+  <div class="alert alert-warning mt-4">
+    <h5>Article Rejected</h5>
+    <p>
+      This article has been rejected by the editor. You may edit and resubmit
+      it.
+    </p>
+  </div>
+  {% endif %} {% if article.status == 'submitted' %}
+  <div class="alert alert-info mt-4">
+    <h5>Pending Review</h5>
+    <p>
+      This article is currently under review and will be published once approved
+      by an editor.
+    </p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
