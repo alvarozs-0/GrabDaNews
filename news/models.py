@@ -227,9 +227,18 @@ class Article(models.Model):
         """
         Override save to handle approval workflow.
         """
-        # Auto-set publisher based on author's publisher if not set
-        if not self.publisher and self.author.publisher:
-            self.publisher = self.author.publisher
+        # Only auto-set publisher if this is a new article (no ID yet)
+        # and no publisher is explicitly set
+        if (not self.pk and
+                not self.publisher and
+                self.author.publishers.exists()):
+            # Check if this is explicitly meant to be independent
+            force_independent = kwargs.pop('force_independent', False)
+            if not force_independent:
+                self.publisher = self.author.publishers.first()
+        else:
+            # Remove the flag if it exists (for subsequent saves)
+            kwargs.pop('force_independent', None)
 
         super().save(*args, **kwargs)
 

@@ -130,7 +130,7 @@ class UserRegistrationForm(UserCreationForm):
                 else:
                     # For editors/journalists, set as work affiliation
                     user.publishers.set(publishers)
-            
+
         return user
 
 
