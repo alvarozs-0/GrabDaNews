@@ -19,7 +19,7 @@ def home(request):
     """
     # Show recent approved articles
     recent_articles = Article.objects.filter(status='approved').order_by(
-        '-published_at')[:5]
+        '-published_at')[:6]
 
     context = {
         'recent_articles': recent_articles
@@ -386,6 +386,10 @@ def edit_article(request, article_id):
             return redirect('article_detail', article_id=article.id)
     elif request.user.role == 'editor':
         # Editors can edit articles from their affiliated publishers
+        # but not approved articles
+        if article.status == 'approved':
+            messages.error(request, "Approved articles cannot be edited.")
+            return redirect('article_detail', article_id=article.id)
         if (article.publisher and
                 article.publisher not in request.user.publishers.all()):
             messages.error(request, "You can only edit articles from your "

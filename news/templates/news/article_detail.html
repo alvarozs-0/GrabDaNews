@@ -55,7 +55,7 @@
         {% if user.is_authenticated %}
           <!-- Author actions -->
           {% if user.role == 'journalist' and article.author == user %}
-            {% if article.status == 'submitted' %}
+            {% if article.status == 'submitted' or article.status == 'rejected' %}
               <a href="{% url 'edit_article' article.id %}" class="btn btn-outline-primary">
                 Edit Article
               </a>
@@ -71,6 +71,13 @@
               <a href="{% url 'approve_article' article.id %}" class="btn btn-outline-success">
                 Review Article
               </a>
+            {% endif %}
+            {% if article.status != 'approved' %}
+              {% if not article.publisher or article.publisher in user.publishers.all %}
+                <a href="{% url 'edit_article' article.id %}" class="btn btn-outline-primary">
+                  Edit Article
+                </a>
+              {% endif %}
             {% endif %}
             {% if not article.publisher or article.publisher in user.publishers.all %}
               <a href="{% url 'delete_article' article.id %}" class="btn btn-outline-danger">
