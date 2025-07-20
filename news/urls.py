@@ -10,6 +10,12 @@ from .views import (
     edit_article,
     approve_article,
     delete_article,
+    my_subscriptions,
+    newsletter_list,
+    create_newsletter,
+    journalist_list,
+    subscribe_to_journalist,
+    unsubscribe_from_journalist,
 )
 
 
@@ -29,4 +35,16 @@ urlpatterns = [
          name='approve_article'),
     path('articles/<int:article_id>/delete/', delete_article,
          name='delete_article'),
+
+    # Subscription management
+    path('subscriptions/', my_subscriptions, name='my_subscriptions'),
+    path('journalists/', journalist_list, name='journalist_list'),
+    path('journalists/<int:journalist_id>/subscribe/', subscribe_to_journalist,
+         name='subscribe_to_journalist'),
+    path('journalists/<int:journalist_id>/unsubscribe/',
+         unsubscribe_from_journalist, name='unsubscribe_from_journalist'),
+
+    # Newsletter management
+    path('newsletters/', newsletter_list, name='newsletter_list'),
+    path('newsletters/create/', create_newsletter, name='create_newsletter'),
 ]

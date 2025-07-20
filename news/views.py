@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
-from .models import Article, CustomUser, Publisher
+from .models import Article, CustomUser, Publisher, Newsletter, Subscription
+import sys
 from .utils import (verify_username, verify_password, verify_email,
                     verify_role_publisher)
 
@@ -239,27 +240,29 @@ def article_detail(request, article_id):
 # ARTICLE MANAGEMENT VIEWS
 # =============================================================================
 
-@login_required
 def article_list(request):
     """
     List articles based on user role and permissions.
     """
-    user = request.user
-
-    if user.role == 'journalist':
-        # Journalists see their own articles
-        articles = Article.objects.filter(author=user)
-    elif user.role == 'editor':
-        # Editors see articles from their affiliated publishers
-        if user.publishers.exists():
-            articles = Article.objects.filter(
-                Q(publisher__in=user.publishers.all()) | Q(publisher=None)
-            )
-        else:
-            articles = Article.objects.filter(publisher=None)
-    else:
-        # Readers see only approved articles
+    if not request.user.is_authenticated:
+        # Non-authenticated users see only approved articles
         articles = Article.objects.filter(status='approved')
+    else:
+        user = request.user
+        if user.role == 'journalist':
+            # Journalists see their own articles
+            articles = Article.objects.filter(author=user)
+        elif user.role == 'editor':
+            # Editors see articles from their affiliated publishers
+            if user.publishers.exists():
+                articles = Article.objects.filter(
+                    Q(publisher__in=user.publishers.all()) | Q(publisher=None)
+                )
+            else:
+                articles = Article.objects.filter(publisher=None)
+        else:
+            # Readers see only approved articles
+            articles = Article.objects.filter(status='approved')
 
     # Pagination
     paginator = Paginator(articles, 10)  # Show 10 articles per page
@@ -269,7 +272,8 @@ def article_list(request):
     context = {
         'page_obj': page_obj,
         'articles': page_obj,
-        'user_role': user.role if user.is_authenticated else None
+        'user_role': (request.user.role if request.user.is_authenticated
+                      else None)
     }
 
     return render(request, 'news/article_list.html', context)
@@ -301,38 +305,63 @@ def create_article(request):
             return render(request, 'news/create_article.html', context)
 
         try:
-            # Create article
-            article = Article.objects.create(
+            # Determine the publisher (if valid)
+            publisher = None
+
+            if publisher_id and publisher_id != 'independent':
+
+                try:
+                    potential_publisher = Publisher.objects.get(
+                        id=int(publisher_id))
+                    if potential_publisher in request.user.publishers.all():
+                        publisher = potential_publisher
+                        print(f"DEBUG: Set publisher to: {publisher}",
+                              file=sys.stderr)
+                    else:
+                        messages.warning(request, "You're not affiliated with "
+                                                  "that publisher. Article "
+                                                  "submitted as independent.")
+                except (Publisher.DoesNotExist, ValueError):
+                    messages.warning(request, "Invalid publisher selected. "
+                                              "Article submitted as "
+                                              "independent.")
+            else:
+                print("DEBUG: Skipping publisher logic - staying independent",
+                      file=sys.stderr)
+
+            print(f"DEBUG: Final publisher value before creation: {publisher}",
+                  file=sys.stderr)
+
+            # Create article with publisher (or None)
+            # If publisher is None (independent), create and save with flag
+            article = Article(
                 title=title,
                 content=content,
                 author=request.user,
-                status='submitted'
+                status='submitted',
+                publisher=publisher
             )
-
-            # Set publisher if provided
-            if publisher_id:
-                try:
-                    publisher = Publisher.objects.get(id=publisher_id)
-                    # Verify journalist is affiliated with this publisher
-                    if publisher in request.user.publishers.all():
-                        article.publisher = publisher
-                    else:
-                        # Allow independent submission
-                        article.publisher = None
-                except Publisher.DoesNotExist:
-                    article.publisher = None
-
-            article.save()
-
+            article.save(force_independent=(publisher is None))
+            print(f"DEBUG: Article created with publisher: "
+                  f"{article.publisher}", file=sys.stderr)
+            print(f"Article publisher: {article.publisher}", file=sys.stderr)
             messages.success(request, "Article submitted successfully!")
             return redirect('article_detail', article_id=article.id)
 
         except Exception as e:
             messages.error(request, f"Error creating article: {str(e)}")
+            context = {
+                'title': title,
+                'content': content,
+                'publisher_id': publisher_id,
+                'publishers': request.user.publishers.all()
+            }
+            return render(request, 'news/create_article.html', context)
 
-    # GET request - show form
+    # GET request - show empty form
     context = {
-        'publishers': request.user.publishers.all()
+        'publishers': request.user.publishers.all(),
+        'publisher_id': 'independent'
     }
     return render(request, 'news/create_article.html', context)
 
@@ -348,6 +377,13 @@ def edit_article(request, article_id):
     if request.user.role == 'journalist' and article.author != request.user:
         messages.error(request, "You can only edit your own articles.")
         return redirect('article_list')
+    elif request.user.role == 'journalist' and article.author == request.user:
+        # Journalists can only edit their own articles if they are
+        # 'submitted' or 'rejected'
+        if article.status not in ['submitted', 'rejected']:
+            messages.error(request, "You can only edit articles that are "
+                           "submitted or rejected.")
+            return redirect('article_detail', article_id=article.id)
     elif request.user.role == 'editor':
         # Editors can edit articles from their affiliated publishers
         if (article.publisher and
@@ -368,8 +404,14 @@ def edit_article(request, article_id):
         else:
             article.title = title
             article.content = content
+            # If article was rejected, reset status to submitted for re-review
+            if article.status == 'rejected':
+                article.status = 'submitted'
+                messages.success(request, "Article updated and resubmitted "
+                                 "for review!")
+            else:
+                messages.success(request, "Article updated successfully!")
             article.save()
-            messages.success(request, "Article updated successfully!")
             return redirect('article_detail', article_id=article.id)
 
     return render(request, 'news/edit_article.html', {'article': article})
@@ -441,3 +483,126 @@ def delete_article(request, article_id):
         return redirect('article_list')
 
     return render(request, 'news/delete_article.html', {'article': article})
+
+
+@login_required
+def my_subscriptions(request):
+    """
+    View user's journalist subscriptions (readers only).
+    Publisher subscriptions are managed during registration only.
+    """
+    if request.user.role != 'reader':
+        messages.error(request, "Only readers have subscription management.")
+        return redirect('home')
+
+    # Get journalist subscriptions only
+    journalist_subscriptions = request.user.subscribed_journalists.all()
+
+    context = {
+        'journalist_subscriptions': journalist_subscriptions
+    }
+
+    return render(request, 'news/my_subscriptions.html', context)
+
+
+@login_required
+def journalist_list(request):
+    """
+    List all journalists for subscription purposes (readers only).
+    """
+    if request.user.role != 'reader':
+        messages.error(request, "Only readers can browse and subscribe to "
+                       "journalists.")
+        return redirect('home')
+
+    journalists = CustomUser.objects.filter(role='journalist').order_by(
+        'username')
+
+    # Get current user's subscribed journalists if they exist
+    subscribed_journalist_ids = []
+    if hasattr(request.user, 'subscribed_journalists'):
+        subscribed_journalist_ids = list(
+            request.user.subscribed_journalists.values_list('id', flat=True)
+        )
+
+    context = {
+        'journalists': journalists,
+        'subscribed_journalist_ids': subscribed_journalist_ids
+    }
+
+    return render(request, 'news/journalist_list.html', context)
+
+
+@login_required
+def subscribe_to_journalist(request, journalist_id):
+    """
+    Subscribe to a journalist's articles (readers only).
+    """
+    if request.user.role != 'reader':
+        messages.error(request, "Only readers can subscribe to journalists.")
+        return redirect('home')
+
+    journalist = get_object_or_404(CustomUser, id=journalist_id,
+                                   role='journalist')
+
+    # Add journalist to user's subscribed journalists
+    if hasattr(request.user, 'subscribed_journalists'):
+        request.user.subscribed_journalists.add(journalist)
+        name = journalist.get_full_name() or journalist.username
+        messages.success(request, f"Successfully subscribed to {name}!")
+    else:
+        messages.error(request, "Subscription feature not available.")
+
+    return redirect('journalist_list')
+
+
+@login_required
+def unsubscribe_from_journalist(request, journalist_id):
+    """
+    Unsubscribe from a journalist's articles (readers only).
+    """
+    if request.user.role != 'reader':
+        messages.error(request, "Only readers can unsubscribe from "
+                       "journalists.")
+        return redirect('home')
+
+    journalist = get_object_or_404(CustomUser, id=journalist_id,
+                                   role='journalist')
+
+    # Remove journalist from user's subscribed journalists
+    if hasattr(request.user, 'subscribed_journalists'):
+        request.user.subscribed_journalists.remove(journalist)
+        name = journalist.get_full_name() or journalist.username
+        messages.success(request, f"Successfully unsubscribed from {name}!")
+    else:
+        messages.error(request, "Subscription feature not available.")
+
+    return redirect('journalist_list')
+
+@login_required
+def newsletter_list(request):
+    """
+    List newsletters - placeholder view.
+    """
+    context = {
+        'newsletters': [],
+        'user_role': request.user.role
+    }
+
+    return render(request, 'news/newsletter_list.html', context)
+
+
+@login_required
+def create_newsletter(request):
+    """
+    Create newsletter - placeholder view.
+    """
+    if request.user.role not in ['journalist', 'editor']:
+        messages.error(request, "Only journalists and editors can create "
+                       "newsletters.")
+        return redirect('newsletter_list')
+
+    context = {
+        'publishers': request.user.publishers.all()
+    }
+    return render(request, 'news/create_newsletter.html', context)

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subscriptions - GrabDaNews{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>My Journalist Subscriptions</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    <div class="col-12">
+      <p class="text-muted">
+        Here are the journalists you're following. You can manage your 
+        publisher subscriptions during account registration only.
+      </p>
+      
+      {% if journalist_subscriptions %}
+        <div class="list-group">
+          {% for journalist in journalist_subscriptions %}
+            <div class="list-group-item d-flex justify-content-between align-items-start">
+              <div>
+                <h5>{{ journalist.get_full_name|default:journalist.username }}</h5>
+                <p class="mb-1">{{ journalist.email }}</p>
+                <small class="text-muted">
+                  {% if journalist.publishers.exists %}
+                    Affiliated with: 
+                    {% for publisher in journalist.publishers.all %}
+                      {{ publisher.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  {% else %}
+                    Independent Journalist
+                  {% endif %}
+                </small>
+              </div>
+              <a href="{% url 'unsubscribe_from_journalist' journalist.id %}" 
+                 class="btn btn-outline-danger btn-sm"
+                 onclick="return confirm('Unsubscribe from {{ journalist.get_full_name|default:journalist.username }}?')">
+                Unsubscribe
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-info">
+          <p>You are not following any journalists yet.</p>
+          <p><a href="{% url 'journalist_list' %}">Browse journalists</a> to find writers you're interested in.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+    <a href="{% url 'journalist_list' %}" class="btn btn-primary">Browse Journalists</a>
+  </div>
+</div>
+{% endblock %}

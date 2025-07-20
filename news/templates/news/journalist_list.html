@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Journalists - GrabDaNews{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>Browse Journalists</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <p class="text-muted">
+        Discover and subscribe to journalists to stay updated with their latest articles.
+      </p>
+    </div>
+    <div class="col-md-4 text-end">
+      <a href="{% url 'my_subscriptions' %}" class="btn btn-outline-secondary">
+        View My Subscriptions
+      </a>
+    </div>
+  </div>
+
+  {% if journalists %}
+    <div class="row">
+      {% for journalist in journalists %}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                {{ journalist.get_full_name|default:journalist.username }}
+              </h5>
+              <p class="card-text">
+                <strong>Username:</strong> {{ journalist.username }}<br>
+                <strong>Email:</strong> {{ journalist.email }}<br>
+                {% if journalist.publishers.exists %}
+                  <strong>Affiliated with:</strong>
+                  {% for publisher in journalist.publishers.all %}
+                    <span class="badge bg-secondary">{{ publisher.name }}</span>
+                  {% endfor %}
+                {% else %}
+                  <span class="text-muted">Independent Journalist</span>
+                {% endif %}
+              </p>
+              
+              <div class="d-grid gap-2">
+                {% if journalist.id in subscribed_journalist_ids %}
+                  <a href="{% url 'unsubscribe_from_journalist' journalist.id %}" 
+                     class="btn btn-outline-danger btn-sm"
+                     onclick="return confirm('Are you sure you want to unsubscribe from {{ journalist.get_full_name|default:journalist.username }}?')">
+                    <i class="fas fa-user-minus"></i> Unsubscribe
+                  </a>
+                {% else %}
+                  <a href="{% url 'subscribe_to_journalist' journalist.id %}" 
+                     class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-user-plus"></i> Subscribe
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      <h4>No Journalists Found</h4>
+      <p>There are currently no journalists registered on the platform.</p>
+    </div>
+  {% endif %}
+
+  <div class="mt-4">
+    <a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+  </div>
+</div>
+{% endblock %}

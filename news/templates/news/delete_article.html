@@ -39,7 +39,7 @@
       <div class="article-meta">
         <p>
           <strong>Status:</strong>
-          <span class="badge {% if article.status == 'approved' %}badge-success {% elif article.status == 'rejected' %}badge-danger {% else %}badge-warning{% endif %}">
+          <span class="badge {% if article.status == 'approved' %}bg-success {% elif article.status == 'rejected' %}bg-danger {% else %}bg-warning{% endif %}">
             {{ article.get_status_display }}
           </span>
         </p>

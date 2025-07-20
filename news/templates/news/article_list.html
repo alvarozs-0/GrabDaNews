@@ -7,7 +7,7 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Articles</h2>
     {% if user.role == 'journalist' %}
-      <a href="{% url 'create_article' %}" class="btn btn-primary">Create New Article</a>
+      <a href="{% url 'create_article' %}" class="btn btn-outline-success">Create New Article</a>
     {% endif %}
   </div>
 
