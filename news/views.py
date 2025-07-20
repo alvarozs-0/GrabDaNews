@@ -419,7 +419,7 @@ def delete_article(request, article_id):
     Delete an article.
     """
     article = get_object_or_404(Article, id=article_id)
-    
+
     # Permission check
     can_delete = False
     if request.user.role == 'journalist' and article.author == request.user:
@@ -428,16 +428,16 @@ def delete_article(request, article_id):
         if (not article.publisher or
                 article.publisher in request.user.publishers.all()):
             can_delete = True
-    
+
     if not can_delete:
         messages.error(request, "Permission denied.")
         return redirect('article_list')
-    
+
     if request.method == 'POST':
         article_title = article.title
         article.delete()
         messages.success(request, f"Article '{article_title}' deleted "
                          f"successfully!")
         return redirect('article_list')
-    
+
     return render(request, 'news/delete_article.html', {'article': article})
