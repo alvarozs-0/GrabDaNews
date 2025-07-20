@@ -23,18 +23,29 @@ def send_article_approval_email(article):
     - The publisher of the article
     - The journalist (author) of the article
     """
+    # print(f"Testing email for article '{article.title}'")
+    # print(f"Author: {article.author.username}")
+    # print(f"Publisher: {article.publisher.name if article.publisher "
+    #       f"else 'Independent'}")
+
     # Get all subscribers for this article's publisher
     publisher_subscribers = set()
     if article.publisher:
         publisher_subscribers = set(article.publisher.subscribers.all())
 
     # Get all subscribers for this article's journalist (author)
-    journalist_subscribers = set(article.author.subscribed_journalists.all())
+    journalist_subscribers = set(article.author.journalist_subscribers.all())
+    # print(f"Journalist ({article.author.username}) "
+    #       f"subscribers: {len(journalist_subscribers)}")
+    # for user in journalist_subscribers:
+    #     print(f"      - {user.username} ({user.email})")
 
     # Combine both sets to avoid duplicate emails
     all_subscribers = publisher_subscribers | journalist_subscribers
+    # print(f"Total unique subscribers: {len(all_subscribers)}")
 
     if not all_subscribers:
+        # print(f"No subscribers found - no emails will be sent")
         return  # No subscribers to notify
 
     # Prepare email content
@@ -60,6 +71,7 @@ You are receiving this email because you subscribed to updates from {'this publi
     subscriber_emails = [user.email for user in all_subscribers if user.email]
 
     if subscriber_emails:
+        print(f"   📧 Sending emails to: {', '.join(subscriber_emails)}")
         try:
             send_mail(
                 subject=subject,
@@ -347,6 +359,7 @@ def create_article(request):
     """
     Create a new article (journalists only).
     """
+
     if request.user.role != 'journalist':
         messages.error(request, "Only journalists can create articles.")
         return redirect('article_list')
@@ -378,8 +391,6 @@ def create_article(request):
                         id=int(publisher_id))
                     if potential_publisher in request.user.publishers.all():
                         publisher = potential_publisher
-                        print(f"DEBUG: Set publisher to: {publisher}",
-                              file=sys.stderr)
                     else:
                         messages.warning(request, "You're not affiliated with "
                                                   "that publisher. Article "
@@ -388,12 +399,6 @@ def create_article(request):
                     messages.warning(request, "Invalid publisher selected. "
                                               "Article submitted as "
                                               "independent.")
-            else:
-                print("DEBUG: Skipping publisher logic - staying independent",
-                      file=sys.stderr)
-
-            print(f"DEBUG: Final publisher value before creation: {publisher}",
-                  file=sys.stderr)
 
             # Create article with publisher (or None)
             # If publisher is None (independent), create and save with flag
