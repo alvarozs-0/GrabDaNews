@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
-from .models import Article, CustomUser, Publisher, Newsletter, Subscription
+from .models import Article, CustomUser, Publisher
 import sys
 from .utils import (verify_username, verify_password, verify_email,
                     verify_role_publisher)
@@ -578,6 +578,7 @@ def unsubscribe_from_journalist(request, journalist_id):
         messages.error(request, "Subscription feature not available.")
 
     return redirect('journalist_list')
+
 
 @login_required
 def newsletter_list(request):

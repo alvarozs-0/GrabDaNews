@@ -31,7 +31,8 @@ class CustomUserAdmin(UserAdmin):
     def get_subscribed_journalists(self, obj):
         """Display subscribed journalists for list view."""
 
-        return ", ".join([user.username for user in obj.subscribed_journalists.all()])
+        return ", ".join([user.username for user in
+                          obj.subscribed_journalists.all()])
     get_subscribed_journalists.short_description = 'Subscribed Journalists'
     list_filter = ('role', 'publishers', 'is_staff', 'is_active')
     search_fields = ('username', 'email', 'first_name', 'last_name')
@@ -41,8 +42,6 @@ class CustomUserAdmin(UserAdmin):
 
         return ", ".join([pub.name for pub in obj.publishers.all()])
     get_publishers.short_description = 'Publishers'
-
-
 
 
 @admin.register(Publisher)

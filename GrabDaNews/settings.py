@@ -128,7 +128,7 @@ STATICFILES_DIRS = [
 ]
 
 # The directory where static files will be collected for production
-# This is where Django will collect all static files when you run 
+# This is where Django will collect all static files when you run
 # `collectstatic`
 STATIC_ROOT = BASE_DIR / "static"
 
