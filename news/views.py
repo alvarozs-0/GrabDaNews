@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.core.mail import send_mail
 from django.db.models import Q
 from django.utils import timezone
 from .models import Article, CustomUser, Publisher
@@ -13,6 +14,68 @@ from .utils import (verify_username, verify_password, verify_email,
 
 
 # Create your views here.
+
+def send_article_approval_email(article):
+    """
+    Send email notification to subscribers when an article is approved.
+
+    Sends to users who are subscribed to either:
+    - The publisher of the article
+    - The journalist (author) of the article
+    """
+    # Get all subscribers for this article's publisher
+    publisher_subscribers = set()
+    if article.publisher:
+        publisher_subscribers = set(article.publisher.subscribers.all())
+
+    # Get all subscribers for this article's journalist (author)
+    journalist_subscribers = set(article.author.subscribed_journalists.all())
+
+    # Combine both sets to avoid duplicate emails
+    all_subscribers = publisher_subscribers | journalist_subscribers
+
+    if not all_subscribers:
+        return  # No subscribers to notify
+
+    # Prepare email content
+    subject = f"New Article Published: {article.title}"
+
+    # Create email body with article details
+    message = f"""
+A new article has been published on GrabDaNews!
+
+Title: {article.title}
+Author: {article.author.get_full_name() or article.author.username}
+Publisher: {article.publisher.name if article.publisher else 'Independent'}
+Published: {article.published_at.strftime('%B %d, %Y at %I:%M %p')}
+
+Summary:
+{article.content[:200]}{'...' if len(article.content) > 200 else ''}
+
+---
+You are receiving this email because you subscribed to updates from {'this publisher' if article.publisher else 'this journalist'}.
+    """.strip()
+
+    # Send email to each subscriber
+    subscriber_emails = [user.email for user in all_subscribers if user.email]
+
+    if subscriber_emails:
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email='news@grabdanews.com',  # From email
+                recipient_list=subscriber_emails,
+                fail_silently=False,  # Raise exceptions on failure
+            )
+            print(f"Email notifications sent to {len(subscriber_emails)} "
+                  f"subscribers for article: {article.title}")
+        except Exception as e:
+            print(f"Failed to send email notifications: {str(e)}")
+    else:
+        print("No subscriber email addresses found")
+
+
 def home(request):
     """
     Home view for the news application.
@@ -447,13 +510,18 @@ def approve_article(request, article_id):
             article.status = 'approved'
             article.approved_by = request.user
             article.published_at = timezone.now()
+            article.save()
+
+            # Send email notifications to subscribers
+            send_article_approval_email(article)
+
             messages.success(request, "Article approved and published!")
         elif action == 'reject':
             article.status = 'rejected'
             article.approved_by = request.user
+            article.save()
             messages.success(request, "Article rejected.")
 
-        article.save()
         return redirect('article_list')
 
     return render(request, 'news/approve_article.html', {'article': article})
