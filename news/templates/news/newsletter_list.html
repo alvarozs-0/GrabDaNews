@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Newsletters - GrabDaNews{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Newsletters</h2>
+    {% if user.role in 'journalist,editor' %}
+      <a href="{% url 'create_newsletter' %}" class="btn btn-primary">Create Newsletter</a>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% if newsletters %}
+    <div class="row">
+      {% for newsletter in newsletters %}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{ newsletter.title }}</h5>
+              <p class="card-text">{{ newsletter.content|truncatewords:20 }}</p>
+              <div class="mb-2">
+                <small class="text-muted">
+                  By {{ newsletter.author.get_full_name|default:newsletter.author.username }}
+                  {% if newsletter.publisher %} for {{ newsletter.publisher.name }} {% endif %}
+                </small>
+              </div>
+              <div class="mb-2">
+                <span class="badge {% if newsletter.status == 'sent' %}bg-success {% else %}bg-warning{% endif %}">
+                  {{ newsletter.get_status_display }}
+                </span>
+              </div>
+              <div class="btn-group w-100">
+                <button class="btn btn-outline-primary btn-sm" disabled>View Details (Coming Soon)</button>
+              </div>
+            </div>
+            <div class="card-footer">
+              <small class="text-muted">
+                Created: {{ newsletter.created_at|date:"M d, Y" }}
+                {% if newsletter.sent_at %} | Sent: {{ newsletter.sent_at|date:"M d, Y" }} {% endif %}
+              </small>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      <h4>No newsletters found</h4>
+      {% if user.role in 'journalist,editor' %}
+        <p>
+          You haven't created any newsletters yet.
+          <a href="{% url 'create_newsletter' %}">Create your first newsletter</a>!
+        </p>
+      {% else %}
+        <p>No newsletters are available at the moment.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="mt-4">
+    <a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+  </div>
+</div>
+{% endblock %}

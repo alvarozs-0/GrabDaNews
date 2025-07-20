@@ -16,13 +16,30 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('subscribed_publishers', 'subscribed_journalists')
         }),
     )
-    readonly_fields = ()
-    list_display = ('username', 'email', 'role', 'get_publishers', 'is_staff')
+
+    list_display = (
+        'username', 'email', 'role', 'get_publishers',
+        'get_subscribed_publishers', 'get_subscribed_journalists', 'is_staff'
+    )
+
+    def get_subscribed_publishers(self, obj):
+        """Display subscribed publishers for list view."""
+
+        return ", ".join([pub.name for pub in obj.subscribed_publishers.all()])
+    get_subscribed_publishers.short_description = 'Subscribed Publishers'
+
+    def get_subscribed_journalists(self, obj):
+        """Display subscribed journalists for list view."""
+
+        return ", ".join([user.username for user in
+                          obj.subscribed_journalists.all()])
+    get_subscribed_journalists.short_description = 'Subscribed Journalists'
     list_filter = ('role', 'publishers', 'is_staff', 'is_active')
     search_fields = ('username', 'email', 'first_name', 'last_name')
 
     def get_publishers(self, obj):
         """Display publishers for list view."""
+
         return ", ".join([pub.name for pub in obj.publishers.all()])
     get_publishers.short_description = 'Publishers'
 
@@ -32,6 +49,7 @@ class PublisherAdmin(admin.ModelAdmin):
     """
     Admin configuration for Publisher model.
     """
+
     list_display = ('name', 'description')
     search_fields = ('name', 'description')
     ordering = ('name',)

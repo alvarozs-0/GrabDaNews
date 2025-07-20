@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Article - GrabDaNews{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>Create New Article</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" class="form-control" id="title" name="title" 
+             value="{{ title|default:'' }}" required maxlength="200">
+    </div>
+
+    <div class="mb-3">
+      <label for="content" class="form-label">Content</label>
+      <textarea class="form-control" id="content" name="content" rows="15" 
+                required>{{ content|default:'' }}</textarea>
+    </div>
+
+    {% if publishers %}
+      <div class="mb-3">
+        <label for="publisher" class="form-label">Publisher</label>
+        <select class="form-control" id="publisher" name="publisher">
+          {% with publisher_id_str=publisher_id|stringformat:"s" %}
+            <option value="independent" {% if publisher_id_str == "independent" or not publisher_id_str %}selected{% endif %}>
+              Independent (No Publisher)
+            </option>
+            {% for pub in publishers %}
+              {% with pub_id_str=pub.id|stringformat:"s" %}
+                <option value="{{ pub_id_str }}" {% if publisher_id_str == pub_id_str %}selected{% endif %}>
+                  {{ pub.name }}
+                </option>
+              {% endwith %}
+            {% endfor %}
+          {% endwith %}
+        </select>
+        <small class="text-muted">
+          Choose "Independent" for personal articles, or select a publisher you're affiliated with.
+        </small>
+      </div>
+    {% else %}
+      <div class="mb-3">
+        <div class="alert alert-info">
+          <strong>Publisher:</strong> Independent (No Publisher)
+          <br>
+          <small>You are not affiliated with any publishers, so this article will be submitted independently.</small>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="mb-3">
+      <button type="submit" class="btn btn-primary">Submit Article</button>
+      <a href="{% url 'article_list' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+  <div class="alert alert-info">
+    <h5>About Article Submission</h5>
+    <ul>
+      <li>Articles are submitted with status "Submitted for Review"</li>
+      <li>Editors from your affiliated publishers can review and approve your articles</li>
+      <li>Independent articles can be reviewed by any editor</li>
+      <li>You can edit your articles until they are approved</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
