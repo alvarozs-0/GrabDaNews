@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Publisher, Article, Newsletter, Subscription
+from .models import CustomUser, Publisher, Article
 
 
 @admin.register(CustomUser)
@@ -116,55 +116,3 @@ class ArticleAdmin(admin.ModelAdmin):
             f'{updated} articles were successfully rejected.'
         )
     reject_articles.short_description = "Reject selected articles"
-
-
-@admin.register(Newsletter)
-class NewsletterAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for Newsletter model.
-    """
-    list_display = ('title', 'author', 'publisher', 'status', 'created_at')
-    list_filter = ('status', 'publisher', 'created_at')
-    search_fields = ('title', 'content', 'author__username')
-    readonly_fields = ('created_at', 'updated_at')
-
-    fieldsets = (
-        ('Newsletter Information', {
-            'fields': ('title', 'content')
-        }),
-        ('Author & Publication', {
-            'fields': ('author', 'publisher')
-        }),
-        ('Status', {
-            'fields': ('status', 'sent_at')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at')
-        }),
-    )
-
-
-@admin.register(Subscription)
-class SubscriptionAdmin(admin.ModelAdmin):
-    """
-    Admin configuration for Subscription model.
-    """
-    list_display = (
-        'subscriber', 'subscription_type', 'get_subscribed_to'
-    )
-    list_filter = ('subscription_type',)
-    search_fields = (
-        'subscriber__username', 'publisher__name',
-        'journalist__username'
-    )
-    readonly_fields = ()
-
-    def get_subscribed_to(self, obj):
-        """
-        Display what the user is subscribed to.
-        """
-        if obj.subscription_type == 'publisher':
-            return obj.publisher.name if obj.publisher else 'N/A'
-        else:
-            return obj.journalist.username if obj.journalist else 'N/A'
-    get_subscribed_to.short_description = 'Subscribed To'

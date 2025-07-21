@@ -11,8 +11,6 @@ from .views import (
     approve_article,
     delete_article,
     my_subscriptions,
-    newsletter_list,
-    create_newsletter,
     journalist_list,
     subscribe_to_journalist,
     unsubscribe_from_journalist,
@@ -43,8 +41,4 @@ urlpatterns = [
          name='subscribe_to_journalist'),
     path('journalists/<int:journalist_id>/unsubscribe/',
          unsubscribe_from_journalist, name='unsubscribe_from_journalist'),
-
-    # Newsletter management
-    path('newsletters/', newsletter_list, name='newsletter_list'),
-    path('newsletters/create/', create_newsletter, name='create_newsletter'),
 ]
