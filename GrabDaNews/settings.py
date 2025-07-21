@@ -141,3 +141,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Email settings
 # Use console backend for development to send emails to terminal
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Social Media settings
+# Enable/disable Twitter posting
+ENABLE_TWITTER_POSTING = True  # Set to False to disable Twitter integration

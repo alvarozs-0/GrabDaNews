@@ -8,6 +8,7 @@ from django.core.mail import send_mail
 from django.db.models import Q
 from django.utils import timezone
 from .models import Article, CustomUser, Publisher
+from .twitter_utils import tweet_article_approved
 import sys
 from .utils import (verify_username, verify_password, verify_email,
                     verify_role_publisher)
@@ -519,6 +520,15 @@ def approve_article(request, article_id):
 
             # Send email notifications to subscribers
             send_article_approval_email(article)
+
+            # Post to Twitter/X
+            try:
+                if tweet_article_approved(article):
+                    print(f"Article tweeted successfully: {article.title}")
+                else:
+                    print(f"Failed to tweet article: {article.title}")
+            except Exception as e:
+                print(f"Twitter posting error: {str(e)}")
 
             messages.success(request, "Article approved and published!")
         elif action == 'reject':
