@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Article, CustomUser, Newsletter, Publisher
+from .models import Article, CustomUser, Publisher
 
 
 class ArticleForm(forms.ModelForm):
@@ -132,47 +132,3 @@ class UserRegistrationForm(UserCreationForm):
                     user.publishers.set(publishers)
 
         return user
-
-
-class NewsletterForm(forms.ModelForm):
-    """
-    Form for creating and editing newsletters.
-    """
-    class Meta:
-        model = Newsletter
-        fields = ['title', 'content', 'publisher']
-        widgets = {
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter newsletter title'
-            }),
-            'content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 12,
-                'placeholder': 'Write your newsletter content here...'
-            }),
-            'publisher': forms.Select(attrs={
-                'class': 'form-control'
-            }),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Make publisher field optional for independent journalists
-        self.fields['publisher'].required = False
-        self.fields['publisher'].empty_label = "Independent (No Publisher)"
-
-
-class SearchForm(forms.Form):
-    """
-    Form for searching articles.
-    """
-    q = forms.CharField(
-        max_length=200,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Search articles...',
-            'autocomplete': 'off'
-        }),
-        label='Search'
-    )

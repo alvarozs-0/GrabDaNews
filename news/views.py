@@ -665,32 +665,3 @@ def unsubscribe_from_journalist(request, journalist_id):
         messages.error(request, "Subscription feature not available.")
 
     return redirect('journalist_list')
-
-
-@login_required
-def newsletter_list(request):
-    """
-    List newsletters - placeholder view.
-    """
-    context = {
-        'newsletters': [],
-        'user_role': request.user.role
-    }
-
-    return render(request, 'news/newsletter_list.html', context)
-
-
-@login_required
-def create_newsletter(request):
-    """
-    Create newsletter - placeholder view.
-    """
-    if request.user.role not in ['journalist', 'editor']:
-        messages.error(request, "Only journalists and editors can create "
-                       "newsletters.")
-        return redirect('newsletter_list')
-
-    context = {
-        'publishers': request.user.publishers.all()
-    }
-    return render(request, 'news/create_newsletter.html', context)

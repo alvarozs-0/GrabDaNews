@@ -100,57 +100,38 @@ class CustomUser(AbstractUser):
                 app_label='news',
                 model='article'
             )
-            newsletter_ct = ContentType.objects.get(
-                app_label='news',
-                model='newsletter'
-            )
         except ContentType.DoesNotExist:
             # Content types not created yet during migrations
             return
 
         if role == 'reader':
-            # Readers can only view articles and newsletters
+            # Readers can only view articles
             permissions = [
                 'view_article',
-                'view_newsletter',
             ]
         elif role == 'editor':
-            # Editors can view, update, and delete articles and newsletters
+            # Editors can view, update, and delete articles
             permissions = [
                 'view_article',
                 'change_article',
                 'delete_article',
-                'view_newsletter',
-                'change_newsletter',
-                'delete_newsletter',
             ]
         elif role == 'journalist':
-            # Journalists can create, view, update, and delete
-            # articles and newsletters
+            # Journalists can create, view, update, and delete articles
             permissions = [
                 'add_article',
                 'view_article',
                 'change_article',
                 'delete_article',
-                'add_newsletter',
-                'view_newsletter',
-                'change_newsletter',
-                'delete_newsletter',
             ]
 
         # Add permissions to group
         for perm_codename in permissions:
             try:
-                if 'article' in perm_codename:
-                    permission = Permission.objects.get(
-                        codename=perm_codename,
-                        content_type=article_ct
-                    )
-                else:
-                    permission = Permission.objects.get(
-                        codename=perm_codename,
-                        content_type=newsletter_ct
-                    )
+                permission = Permission.objects.get(
+                    codename=perm_codename,
+                    content_type=article_ct
+                )
                 group.permissions.add(permission)
             except Permission.DoesNotExist:
                 pass  # Permission will be created after migrations
@@ -241,110 +222,3 @@ class Article(models.Model):
             kwargs.pop('force_independent', None)
 
         super().save(*args, **kwargs)
-
-
-class Newsletter(models.Model):
-    """
-    Model representing a newsletter.
-    """
-    STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('sent', 'Sent'),
-    ]
-
-    title = models.CharField(max_length=200)
-    content = models.TextField()
-
-    # Author information
-    author = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        limit_choices_to={'role__in': ['journalist', 'editor']},
-        related_name='authored_newsletters'
-    )
-
-    # Publication information
-    publisher = models.ForeignKey(
-        Publisher,
-        on_delete=models.CASCADE,
-        related_name='newsletters',
-        null=True,
-        blank=True
-    )
-
-    # Newsletter details
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='draft'
-    )
-    sent_at = models.DateTimeField(null=True, blank=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return self.title
-
-    def save(self, *args, **kwargs):
-        """
-        Override save to handle publisher assignment.
-        """
-        # Auto-set publisher based on author's publisher if not set
-        if not self.publisher and self.author.publisher:
-            self.publisher = self.author.publisher
-
-        super().save(*args, **kwargs)
-
-
-class Subscription(models.Model):
-    """
-    Model to track user subscriptions to publishers and journalists.
-    """
-    SUBSCRIPTION_TYPES = [
-        ('publisher', 'Publisher'),
-        ('journalist', 'Journalist'),
-    ]
-
-    subscriber = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name='subscriptions'
-    )
-
-    subscription_type = models.CharField(
-        max_length=20,
-        choices=SUBSCRIPTION_TYPES
-    )
-
-    # Foreign keys to subscribed entities
-    publisher = models.ForeignKey(
-        Publisher,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='subscriptions'
-    )
-    journalist = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        limit_choices_to={'role': 'journalist'},
-        related_name='journalist_subscriptions'
-    )
-
-    class Meta:
-        unique_together = [
-            ('subscriber', 'publisher'),
-            ('subscriber', 'journalist'),
-        ]
-
-    def __str__(self):
-        if self.subscription_type == 'publisher':
-            return f"{self.subscriber.username} -> {self.publisher.name}"
-        else:
-            return f"{self.subscriber.username} -> {self.journalist.username}"
