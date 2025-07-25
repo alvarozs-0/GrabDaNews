@@ -24,10 +24,6 @@ def send_article_approval_email(article):
     - The publisher of the article
     - The journalist (author) of the article
     """
-    # print(f"Testing email for article '{article.title}'")
-    # print(f"Author: {article.author.username}")
-    # print(f"Publisher: {article.publisher.name if article.publisher "
-    #       f"else 'Independent'}")
 
     # Get all subscribers for this article's publisher
     publisher_subscribers = set()
@@ -36,17 +32,11 @@ def send_article_approval_email(article):
 
     # Get all subscribers for this article's journalist (author)
     journalist_subscribers = set(article.author.journalist_subscribers.all())
-    # print(f"Journalist ({article.author.username}) "
-    #       f"subscribers: {len(journalist_subscribers)}")
-    # for user in journalist_subscribers:
-    #     print(f"      - {user.username} ({user.email})")
 
     # Combine both sets to avoid duplicate emails
     all_subscribers = publisher_subscribers | journalist_subscribers
-    # print(f"Total unique subscribers: {len(all_subscribers)}")
 
     if not all_subscribers:
-        # print(f"No subscribers found - no emails will be sent")
         return  # No subscribers to notify
 
     # Prepare email content
@@ -311,10 +301,6 @@ def article_detail(request, article_id):
 
     return render(request, 'news/article_detail.html', {'article': article})
 
-
-# =============================================================================
-# ARTICLE MANAGEMENT VIEWS
-# =============================================================================
 
 def article_list(request):
     """
