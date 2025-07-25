@@ -18,11 +18,15 @@ from .utils import (verify_username, verify_password, verify_email,
 
 def send_article_approval_email(article):
     """
-    Send email notification to subscribers when an article is approved.
+    Send email notifications to subscribers when an article is approved.
 
-    Sends to users who are subscribed to either:
-    - The publisher of the article
-    - The journalist (author) of the article
+    Notifies users who are subscribed to either the article's publisher
+    or the journalist who authored the article.
+
+    :param Article article: The approved article instance
+
+    :returns: None
+    :rtype: None
     """
 
     # Get all subscribers for this article's publisher
@@ -81,7 +85,15 @@ You are receiving this email because you subscribed to updates from {'this publi
 
 def home(request):
     """
-    Home view for the news application.
+    Display the home page with recent approved articles.
+
+    Shows the 6 most recently published articles for all users.
+    Uses the home.html template to render the content.
+
+    :param HttpRequest request: Django HTTP request object
+
+    :returns: Rendered home page with recent articles
+    :rtype: HttpResponse
     """
     # Show recent approved articles
     recent_articles = Article.objects.filter(status='approved').order_by(
@@ -95,7 +107,15 @@ def home(request):
 
 def login_user(request):
     """
-    Authenticate and log in a user.
+    Handle user authentication and login process.
+
+    Validates username and password, authenticates the user, and logs them in.
+    Handles both GET (show form) and POST (process login) requests.
+
+    :param HttpRequest request: Django HTTP request object
+
+    :returns: Login form or redirect to home after successful login
+    :rtype: HttpResponse
     """
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
@@ -344,7 +364,17 @@ def article_list(request):
 @login_required
 def create_article(request):
     """
-    Create a new article (journalists only).
+    Handle article creation by journalists.
+
+    Allows authenticated journalists to create new articles for submission.
+    Handles form validation and saves articles with 'submitted' status.
+
+    :param HttpRequest request: Django HTTP request object
+
+    :returns: Article creation form or redirect after successful creation
+    :rtype: HttpResponse
+
+    :raises PermissionDenied: If user is not a journalist
     """
 
     if request.user.role != 'journalist':
