@@ -5,12 +5,13 @@ Automatically posts tweets when articles are approved
 
 from requests_oauthlib import OAuth1Session
 from django.conf import settings
+from decouple import config
 
 # Twitter API credentials
-API_KEY = "pwHBMZjs7fd100AyYMFmGEpGm"
-API_KEY_SECRET = "kBp4nbpgIyoHblpsEuXbKnQzUd2w6Cp3OopVHVLEkE7IFtEHDR"
-ACCESS_TOKEN = "1879951288055570432-yD0vDxvnDaYCMDAIczBGrRUDBnKetC"
-ACCESS_TOKEN_SECRET = "R7KHR739uiwvc4C4UyT75DjADPrRig691BMEuAkyHFV2L"
+API_KEY = config('TWITTER_API_KEY')
+API_KEY_SECRET = config('TWITTER_API_KEY_SECRET')
+ACCESS_TOKEN = config('TWITTER_ACCESS_TOKEN')
+ACCESS_TOKEN_SECRET = config('TWITTER_ACCESS_TOKEN_SECRET')
 
 
 def send_tweet(text):
