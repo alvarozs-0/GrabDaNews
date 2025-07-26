@@ -5,8 +5,14 @@ from django.contrib.contenttypes.models import ContentType
 
 class Publisher(models.Model):
     """
-    Model representing a news publication/publisher.
-    A publisher can have multiple editors and journalists.
+    Django model representing a publisher organization.
+
+    A publisher can have multiple editors and journalists associated with it.
+    Readers can subscribe to publishers to receive notifications about
+    new articles.
+
+    :param str name: The unique name of the publisher
+    :param str description: Description of the publisher
     """
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField(blank=True)
@@ -20,7 +26,15 @@ class Publisher(models.Model):
 
 class CustomUser(AbstractUser):
     """
-    Custom user model with roles and specific fields for different user types.
+    Extended Django user model with role-based functionality.
+
+    Supports three user roles: reader, editor, and journalist, each with
+    specific permissions and relationships to publishers and other users.
+
+    :param str role: User role (reader, editor, or journalist)
+    :param ManyToManyField subscribed_publishers: Publishers user subscribes to
+    :param ManyToManyField subscribed_journalists: Journalists user follows
+    :param ManyToManyField publishers: Publishers where user works (staff only)
     """
     ROLE_CHOICES = [
         ('reader', 'Reader'),
@@ -58,8 +72,13 @@ class CustomUser(AbstractUser):
 
     def save(self, *args, **kwargs):
         """
-        Override save method to handle role-based field assignments
-        and group membership.
+        Override Django's save method to handle role-based assignments.
+
+        Manages appropriate field clearing based on user role and automatically
+        assigns users to correct permission groups.
+
+        :param args: Positional arguments passed to parent save method
+        :param kwargs: Keyword arguments passed to parent save method
         """
         # Clear inappropriate fields based on role
         if self.role == 'journalist':
@@ -76,7 +95,10 @@ class CustomUser(AbstractUser):
 
     def assign_to_group(self):
         """
-        Assign user to appropriate group based on their role.
+        Assign user to the appropriate Django group based on their role.
+
+        Removes user from existing groups and adds them to the role-specific
+        group, creating the group if it doesn't exist.
         """
         # Remove user from all existing groups
         self.groups.clear()
@@ -92,7 +114,13 @@ class CustomUser(AbstractUser):
 
     def set_group_permissions(self, group, role):
         """
-        Set permissions for groups based on role.
+        Configure permissions for a role-based group.
+
+        Sets appropriate Django permissions for each user role type,
+        controlling access to article creation, editing, and approval.
+
+        :param Group group: Django group to configure permissions for
+        :param str role: User role (reader, editor, or journalist)
         """
         # Get content types for our models
         try:
@@ -145,7 +173,18 @@ class CustomUser(AbstractUser):
 
 class Article(models.Model):
     """
-    Model representing a news article.
+    Django model representing a news article in the system.
+
+    Articles have a submission and approval workflow, where journalists
+    submit articles that must be approved by editors before publication.
+
+    :param str title: Article headline/title
+    :param str content: Full article text content
+    :param CustomUser author: Journalist who wrote the article
+    :param Publisher publisher: Publisher organization (optional)
+    :param str status: Current review status (submitted/approved/rejected)
+    :param datetime created_at: When article was first created
+    :param datetime updated_at: Last modification timestamp
     """
     STATUS_CHOICES = [
         ('submitted', 'Submitted for Review'),

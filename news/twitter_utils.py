@@ -1,6 +1,9 @@
 """
-Twitter/X integration for GrabDaNews
-Automatically posts tweets when articles are approved
+Twitter/X integration module for GrabDaNews application.
+
+This module provides functionality for automatically posting tweets when
+articles are approved and published. It uses OAuth 1.0a authentication
+with Twitter API v2.
 """
 
 from requests_oauthlib import OAuth1Session
@@ -15,7 +18,15 @@ ACCESS_TOKEN_SECRET = config('TWITTER_ACCESS_TOKEN_SECRET')
 
 
 def send_tweet(text):
-    """Send tweet using Twitter API v2 with OAuth 1.0a"""
+    """Send a tweet using Twitter API v2 with OAuth 1.0a authentication.
+
+    :param str text: The text content of the tweet to be posted
+
+    :returns: True if tweet was posted successfully, False otherwise
+    :rtype: bool
+
+    :raises Exception: If there's an error with the API request
+    """
 
     url = "https://api.twitter.com/2/tweets"
 
@@ -44,7 +55,17 @@ def send_tweet(text):
 
 
 def tweet_article_approved(article):
-    """Tweet when a news article is approved and published"""
+    """Post a tweet when a news article is approved and published.
+
+    Creates a formatted tweet containing article title, author name, and
+    publisher information. Handles text truncation to stay within Twitter's
+    280 character limit.
+
+    :param Article article: The Django model instance of the approved article
+
+    :returns: True if tweet was posted successfully, False otherwise
+    :rtype: bool
+    """
 
     # Check if Twitter posting is enabled
     if not getattr(settings, 'ENABLE_TWITTER_POSTING', False):

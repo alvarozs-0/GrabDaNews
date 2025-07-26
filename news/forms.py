@@ -1,3 +1,11 @@
+"""
+Django forms for the GrabDaNews application.
+
+This module contains form classes for user registration, article creation,
+and other user interface interactions. Forms include validation and
+Bootstrap styling for consistent appearance.
+"""
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Article, CustomUser, Publisher
@@ -5,7 +13,13 @@ from .models import Article, CustomUser, Publisher
 
 class ArticleForm(forms.ModelForm):
     """
-    Form for creating and editing articles.
+    Django ModelForm for creating and editing news articles.
+
+    Provides form fields for article title, content, and publisher selection.
+    Includes Bootstrap styling and validation for journalist use.
+
+    :param Model model: Article model class
+    :param list fields: Form fields to include
     """
     class Meta:
         model = Article
