@@ -13,7 +13,7 @@ A Django-based news management platform that allows publishers, editors, and jou
 
 ## Prerequisites
 
-- Python 3.8+ (Python 3.13.5 recommended)
+- Python 3.10+ (Python 3.13.5 recommended)
 - pip (Python package manager)
 - Docker (For containerized deployment)
 - Git
